@@ -48,3 +48,17 @@
 - JWT tokens last 8 hours. Every route checks the token, then the role, then ownership (for example a teacher can only touch their own courses).
 - Public registration only creates students. Teachers and admins are created by an admin.
 - All SQL is parameterized.
+
+## Reopening and extending attempts
+- **Chosen:** a teacher can add minutes to a running attempt, or reopen one that was auto-submitted by time-up or the switch limit. Saved answers are kept and the score is cleared until the student submits again. Every change is written to the event log with the reason. This resolves the "strict timing vs fairness" conflict (CP2) without weakening the server timer.
+- **Switches after a reopen:** old tab-switch events are marked `excused`, not deleted. The student gets a fresh counter, and the teacher still sees every switch as evidence.
+- **Not allowed:** reopening an attempt the student submitted themselves (that was their decision).
+
+## Accounts: deactivate instead of delete
+- **Chosen:** users are deactivated, not deleted, so past results and the audit trail stay intact. The authenticate middleware checks the database on every request, so deactivation and role changes apply immediately instead of waiting for a token to expire.
+- **Trade-off:** one extra primary-key lookup per request, in exchange for immediate revocation. The load test shows it is not a problem at class scale.
+- **Protections:** an admin cannot deactivate or demote their own account, and the last active admin cannot be removed. A role cannot change once the user has data.
+
+## CSV import and export
+- **Import:** all-or-nothing in one transaction, with a dry-run mode and row-numbered errors. Questions whose text already exists in the course are skipped, so importing twice is harmless.
+- **Export:** values starting with = + - @ get a leading apostrophe, so a student named "=HYPERLINK(...)" cannot run a formula when a teacher opens the file in Excel (CSV injection). A BOM is added so Excel reads non-English names correctly.

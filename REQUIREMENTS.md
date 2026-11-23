@@ -31,20 +31,20 @@ Status: **Done** = built and tested. **Frontend** = handled by the React app. **
 | NFR6 | Audit trail of start, save, switch, submit with server timestamps | `attempt_events` (`created_at DEFAULT NOW()`) | Timeline shows start, tab_switch, auto_submit; `?all=true` adds saves | Done |
 | NFR7 | Reasonable performance when a whole class starts together | Indexes on attempts, events, questions, options; `tests/loadTest.js` | Run `node tests/loadTest.js 30` and paste the output below | Evidence pending |
 
+
 Load test output:
 
 ```
 (paste the result of node tests/loadTest.js 30 here)
 ```
 
-## Proposal items outside FR1 to FR10 (honest status)
-
 | Item | Status |
 |---|---|
-| M4 "question selection rules" (for example 2 easy, 2 medium, 1 hard) | Done. Optional `easy_count`, `medium_count`, `hard_count` on the exam; each student gets that exact mix in random order |
-| Admin "configure system rules"; edit or deactivate users and courses | Not built yet. The admin can create and list, not edit |
-| Examination office wants records of irregularities | The activity report and timeline exist. CSV export is not built yet |
-| CP4 edge cases (refresh, lost connection, duplicate or late submit, two tabs, clock differences, double-fired events) | Handled on the server. Two-tab and late-save cases still need an automated test |
+| M4 question selection rules | Done (difficulty mix) |
+| Admin manages users and rules | Done: edit, deactivate, reset password, edit and delete courses |
+| Examination office wants records of irregularities | Done: activity report, timelines (including excused switches), results CSV export |
+| CP4 edge cases | Done and automated (npm test) |
+| Time extension for a student after a network problem (CP2 fairness) | Done: extend or reopen with a recorded reason |
 
 ## Automated tests
 

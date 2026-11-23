@@ -10,9 +10,10 @@ const { findOwnExam } = require('./examController');
 // Browsers can fire several events for one real switch, so repeats within this window are ignored
 const DEBOUNCE_SECONDS = 2;
 
+// Counts the switches that still count against the student (excused ones are ignored)
 async function countSwitches(client, attemptId) {
     const r = await client.query(
-        "SELECT COUNT(*)::int AS total FROM attempt_events WHERE attempt_id = $1 AND type = 'tab_switch'",
+        "SELECT COUNT(*)::int AS total FROM attempt_events WHERE attempt_id = $1 AND type = 'tab_switch' AND NOT excused",
         [attemptId]
     );
     return r.rows[0].total;
@@ -103,6 +104,7 @@ async function logEvent(req, res) {
 }
 
 // GET /api/exams/:id/activity   (teacher) - one row per student attempt
+// switch_count = ALL switches ever logged (evidence). excused_switches = the ones a reopen forgave.
 async function examActivity(req, res) {
     try {
         const found = await findOwnExam(req, res);
@@ -114,9 +116,11 @@ async function examActivity(req, res) {
 
         const attempts = await pool.query(
             `SELECT a.id AS attempt_id, u.id AS student_id, u.name, u.email,
-              a.status, a.submit_reason, a.started_at, a.submitted_at,
+              a.status, a.submit_reason, a.started_at, a.submitted_at, a.extra_minutes,
               (SELECT COUNT(*)::int FROM attempt_events ev
-               WHERE ev.attempt_id = a.id AND ev.type = 'tab_switch') AS switch_count
+               WHERE ev.attempt_id = a.id AND ev.type = 'tab_switch') AS switch_count,
+              (SELECT COUNT(*)::int FROM attempt_events ev
+               WHERE ev.attempt_id = a.id AND ev.type = 'tab_switch' AND ev.excused) AS excused_switches
        FROM attempts a JOIN users u ON u.id = a.student_id
        WHERE a.exam_id = $1
        ORDER BY switch_count DESC, u.name`,
@@ -154,7 +158,7 @@ async function attemptTimeline(req, res) {
         const filter = req.query.all === 'true' ? '' : "AND type <> 'save'";
         const eventRows = (
             await pool.query(
-                `SELECT type, created_at FROM attempt_events
+                `SELECT type, created_at, detail, excused FROM attempt_events
          WHERE attempt_id = $1 ${filter}
          ORDER BY created_at, id`,
                 [attemptId]
@@ -165,6 +169,8 @@ async function attemptTimeline(req, res) {
             type: e.type,
             created_at: e.created_at,
             seconds_from_start: Math.round((new Date(e.created_at) - new Date(attempt.started_at)) / 1000),
+            detail: e.detail,
+            excused: e.excused,
         }));
 
         res.json({ attempt, events });

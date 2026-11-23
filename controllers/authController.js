@@ -22,7 +22,7 @@ async function register(req, res) {
     const { name, email, password } = req.body;
 
     if (!isText(name) || !isText(email) || !isText(password) ||
-        !name.trim() || !email.trim() || !password) {
+      !name.trim() || !email.trim() || !password) {
       return res.status(400).json({ message: 'Name, email and password are required' });
     }
     if (name.trim().length > 100) {
@@ -70,7 +70,7 @@ async function login(req, res) {
     }
 
     const result = await pool.query(
-      'SELECT id, name, email, role, password_hash FROM users WHERE email = $1',
+      'SELECT id, name, email, role, is_active, password_hash FROM users WHERE email = $1',
       [email.trim().toLowerCase()]
     );
 
@@ -80,7 +80,15 @@ async function login(req, res) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    // Only someone who knows the password is told the account is deactivated
+    if (!user.is_active) {
+      return res.status(403).json({
+        message: 'This account has been deactivated. Contact your administrator',
+      });
+    }
+
     delete user.password_hash;
+    delete user.is_active;
     res.json({ token: makeToken(user), user });
   } catch (err) {
     console.error(err);
@@ -105,4 +113,38 @@ async function me(req, res) {
   }
 }
 
-module.exports = { register, login, me };
+// POST /api/auth/change-password   body: { current_password, new_password }
+// A wrong current password returns 403 (not 401), so the front-end does not log the user out.
+async function changePassword(req, res) {
+  try {
+    const { current_password, new_password } = req.body;
+
+    if (!isText(current_password) || !isText(new_password) || !current_password || !new_password) {
+      return res.status(400).json({ message: 'current_password and new_password are required' });
+    }
+    if (new_password.length < 6 || new_password.length > 72) {
+      return res.status(400).json({ message: 'New password must be 6 to 72 characters' });
+    }
+    if (new_password === current_password) {
+      return res.status(400).json({ message: 'The new password must be different from the current one' });
+    }
+
+    const result = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+    if (
+      result.rows.length === 0 ||
+      !(await bcrypt.compare(current_password, result.rows[0].password_hash))
+    ) {
+      return res.status(403).json({ message: 'The current password is incorrect' });
+    }
+
+    const hash = await bcrypt.hash(new_password, 10);
+    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.user.id]);
+
+    res.json({ message: 'Password changed' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+module.exports = { register, login, me, changePassword };

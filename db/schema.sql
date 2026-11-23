@@ -19,6 +19,7 @@ CREATE TABLE users (
   email         VARCHAR(150) NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   role          VARCHAR(10) NOT NULL CHECK (role IN ('teacher', 'student', 'admin')),
+  is_active     BOOLEAN NOT NULL DEFAULT TRUE,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -87,6 +88,7 @@ CREATE TABLE attempts (
   submit_reason VARCHAR(15)
                 CHECK (submit_reason IN ('manual', 'time_up', 'switch_limit')),
   score         NUMERIC(7,2),
+  extra_minutes INTEGER NOT NULL DEFAULT 0,
   UNIQUE (exam_id, student_id)
 );
 
@@ -116,11 +118,13 @@ CREATE TABLE attempt_events (
   id         SERIAL PRIMARY KEY,
   attempt_id INTEGER NOT NULL REFERENCES attempts(id) ON DELETE CASCADE,
   type       VARCHAR(20) NOT NULL
-             CHECK (type IN ('start', 'save', 'tab_switch', 'submit', 'auto_submit')),
+             CHECK (type IN ('start', 'save', 'tab_switch', 'submit', 'auto_submit', 'extend', 'reopen')),
+  detail     TEXT,
+  excused    BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- indexes for speed (from the proposal)
+-- indexes for speed
 CREATE INDEX idx_attempts_exam_student ON attempts (exam_id, student_id);
 CREATE INDEX idx_events_attempt ON attempt_events (attempt_id);
 CREATE INDEX idx_questions_course ON questions (course_id);

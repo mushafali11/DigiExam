@@ -268,7 +268,7 @@ async function getAttempt(req, res) {
         // Count the tab switches so far (so a page refresh keeps the warning count)
         const switchCount = (
             await pool.query(
-                "SELECT COUNT(*)::int AS total FROM attempt_events WHERE attempt_id = $1 AND type = 'tab_switch'",
+                "SELECT COUNT(*)::int AS total FROM attempt_events WHERE attempt_id = $1 AND type = 'tab_switch' AND NOT excused",
                 [attempt.id]
             )
         ).rows[0].total;

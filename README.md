@@ -77,6 +77,9 @@ npm test
 
 Runs the edge-case test suite against the running server.
 
+
+`npm test` runs three suites: the edge cases (`tests/edgeCases.js`) and the extras (`tests/extrasA.js`: time extension, reopen, teacher review, results export; `tests/extrasB.js`: CSV import and export, admin management, change password). Run `npm run test:extras` for only the new ones.
+
 ## Demo reset
 
 ```

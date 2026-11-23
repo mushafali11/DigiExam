@@ -85,3 +85,47 @@ A question that was already used in a student's attempt cannot be edited or dele
 - **Refresh:** GET /attempts/:id restores the same paper, saved answers, remaining time and switch count.
 - **The paper never contains `is_correct`.** Correct answers only appear in the result review after release.
 - **Any 409 on save, submit or events** means the attempt is finished. Go to the submitted screen.
+
+## Added on 23 November 2026 (contract version 1.1)
+
+### Teacher: time extension and review
+
+| Method and URL | Notes |
+|---|---|
+| POST /exams/:id/attempts/:attemptId/extend | Body `{ extra_minutes: 1 to 120, reason?: "..." }`. In progress: adds time (`action: "extended"`). Auto-submitted by time_up or switch_limit: reopens it (`action: "reopened"`): status back to in_progress, score cleared, saved answers kept, deadline = now + minutes, old tab switches excused. Manual submissions give 409. Returns `{ action, attempt_id, deadline_at, remaining_seconds, extra_minutes_total, message }`. The student then sees the exam as `in_progress` in GET /student/exams and uses "Resume exam" |
+| GET /exams/:id/attempts/:attemptId/review | One student's paper with the correct answers: `{ attempt, score, total_marks, percentage, questions: [{ position, question_id, text, difficulty, marks, options: [{ id, text, is_correct }], selected_option_id, correct_option_id, answered, is_correct }] }`. Works at any time, no release needed |
+| GET /exams/:id/results/export | CSV download of the results table |
+
+Changed responses:
+- GET /exams/:id/activity: each attempt also has `extra_minutes` and `excused_switches`. `switch_count` still counts ALL switches.
+- GET /exams/:id/attempts/:attemptId/events: each event also has `detail` (text or null) and `excused` (boolean). New event types: `extend` and `reopen`.
+- GET /attempts/:id and the switch warnings count only switches that are not excused.
+
+### Teacher: question import and export
+
+| Method and URL | Notes |
+|---|---|
+| GET /questions/import-template | CSV template download |
+| POST /courses/:courseId/questions/import | Body `{ csv: "<file text>", dry_run?: true }`. Columns: `text, difficulty, marks, option1..option6, correct` (correct = position 1 to 6 of the right option; difficulty and marks are optional). Max 200 questions, whole file is rejected if any row is bad. Returns 201 `{ imported, skipped_duplicates }`, or with dry_run 200 `{ valid: true, would_import, skipped_duplicates }`. Errors: 400 `{ message, errors: [{ row, message }] }` (row 1 is the header) |
+| GET /courses/:courseId/questions/export | CSV download in the same format |
+
+### Admin
+
+| Method and URL | Notes |
+|---|---|
+| PATCH /admin/users/:id | Any of `{ name, email, role, is_active, password }`. 409 for: own account deactivation or role change, removing the last active admin, role change when the user already has data, duplicate email |
+| PATCH /courses/:id | Any of `{ code, title, teacher_id }`. 409 duplicate code |
+| DELETE /courses/:id | 409 if the course has exams |
+
+GET /admin/users and POST /admin/users now return `is_active`.
+
+### Any logged-in user
+
+| Method and URL | Notes |
+|---|---|
+| POST /auth/change-password | Body `{ current_password, new_password }`. A wrong current password gives **403**, not 401 (so the front-end does not log the user out) |
+
+### Behaviour changes
+- A deactivated user gets **403** at login, and any existing token returns **401** immediately.
+- Role changes apply immediately to existing tokens (the front-end user object is stale until the next login).
+- CSV downloads need the Authorization header, so the front-end must call them with fetch, read the response as a Blob, and trigger the download itself. A plain link will not work.

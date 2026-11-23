@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "node tests/edgeCases.js",
+    "test": "node tests/edgeCases.js && node tests/extrasA.js && node tests/extrasB.js",
+    "test:edge": "node tests/edgeCases.js",
+    "test:extras": "node tests/extrasA.js && node tests/extrasB.js",
     "demo:reset": "node db/demoReset.js"
   },
   "license": "ISC",
