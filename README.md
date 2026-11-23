@@ -77,9 +77,16 @@ npm test
 
 Runs the edge-case test suite against the running server.
 
-## Live demo checklist
+## Demo reset
 
-1. Log in as the teacher, create an exam (short duration, switch limit 2).
+```
+npm run demo:reset
+```
+
+Wipes the database (asks you to type YES first) and rebuilds: demo accounts, 24 Web Technologies questions, a finished exam "Quiz 1 (completed)" with varied results (manual, time up, switch limit, not attempted) and three live exams. Run it on the morning of the demo, because the live exams stay open for 24 hours from the moment you run it.
+
+## Live demo checklist
+0. Before the demo, run `npm run demo:reset` (server running) and type YES. It wipes all data and rebuilds the accounts, 24 questions and ready-made exams, including a finished quiz with results released.
 2. Log in as two students in two browsers: each gets a different paper (question order and option order).
 3. Refresh a student's page mid-attempt: same paper, saved answers still there, timer continues.
 4. Switch tabs three times: warnings, then auto-submit on the third.

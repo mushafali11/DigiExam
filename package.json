@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "node tests/edgeCases.js"
+    "test": "node tests/edgeCases.js",
+    "demo:reset": "node db/demoReset.js"
   },
   "license": "ISC",
   "type": "commonjs",
