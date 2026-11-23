@@ -1,14 +1,24 @@
 const pool = require('../db/pool');
 const toId = require('../utils/toId');
 
+function isText(value) {
+    return typeof value === 'string';
+}
+
 // POST /api/courses  (admin)
 async function createCourse(req, res) {
     try {
         const { code, title } = req.body;
         const teacherId = toId(req.body.teacher_id);
 
-        if (!code || !title || !teacherId) {
+        if (!isText(code) || !isText(title) || !code.trim() || !title.trim() || !teacherId) {
             return res.status(400).json({ message: 'Code, title and teacher_id are required' });
+        }
+        if (code.trim().length > 20) {
+            return res.status(400).json({ message: 'Code must be at most 20 characters' });
+        }
+        if (title.trim().length > 150) {
+            return res.status(400).json({ message: 'Title must be at most 150 characters' });
         }
 
         const teacher = await pool.query(

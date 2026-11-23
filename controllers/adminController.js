@@ -4,22 +4,31 @@ const pool = require('../db/pool');
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ROLES = ['teacher', 'student', 'admin'];
 
+function isText(value) {
+    return typeof value === 'string';
+}
+
 // POST /api/admin/users
 async function createUser(req, res) {
     try {
         const { name, email, password, role } = req.body;
 
-        if (!name || !email || !password || !role) {
+        if (!isText(name) || !isText(email) || !isText(password) || !isText(role) ||
+            !name.trim() || !email.trim() || !password || !role) {
             return res.status(400).json({ message: 'Name, email, password and role are required' });
         }
         if (!ROLES.includes(role)) {
             return res.status(400).json({ message: 'Role must be teacher, student or admin' });
         }
-        if (!emailRegex.test(email)) {
+        if (name.trim().length > 100) {
+            return res.status(400).json({ message: 'Name must be at most 100 characters' });
+        }
+        if (email.trim().length > 150 || !emailRegex.test(email.trim())) {
             return res.status(400).json({ message: 'Invalid email format' });
         }
-        if (password.length < 6) {
-            return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        // bcrypt only uses the first 72 characters, so longer passwords are refused
+        if (password.length < 6 || password.length > 72) {
+            return res.status(400).json({ message: 'Password must be 6 to 72 characters' });
         }
 
         const cleanEmail = email.trim().toLowerCase();

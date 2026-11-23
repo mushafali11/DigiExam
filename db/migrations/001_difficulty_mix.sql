@@ -1,0 +1,4 @@
+ALTER TABLE exams
+  ADD COLUMN IF NOT EXISTS easy_count   INTEGER NOT NULL DEFAULT 0 CHECK (easy_count >= 0),
+  ADD COLUMN IF NOT EXISTS medium_count INTEGER NOT NULL DEFAULT 0 CHECK (medium_count >= 0),
+  ADD COLUMN IF NOT EXISTS hard_count   INTEGER NOT NULL DEFAULT 0 CHECK (hard_count >= 0);

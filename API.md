@@ -51,7 +51,7 @@ A question that was already used in a student's attempt cannot be edited or dele
 
 | Method and URL | Notes |
 |---|---|
-| POST /courses/:courseId/exams | `{ title, duration_min, start_at, end_at, num_questions, switch_limit, negative_marking }` |
+| POST /courses/:courseId/exams | { title, duration_min, start_at, end_at, num_questions, switch_limit, negative_marking,       easy_count, medium_count, hard_count }
 | GET /courses/:courseId/exams | Returns `{ exams }` |
 | GET /exams/:id | One exam |
 | PUT /exams/:id | Same body as create. 409 once any student has started |

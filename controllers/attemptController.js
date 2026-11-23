@@ -32,6 +32,44 @@ function replyExisting(res, existing) {
     return res.json({ attempt_id: existing.id, resumed: true });
 }
 
+// Picks this student's random questions.
+// If the exam has a difficulty mix, picks exactly that many of each level.
+// Returns a list of question ids, or null if the course does not have enough questions.
+async function pickQuestions(exam) {
+    const mixTotal = exam.easy_count + exam.medium_count + exam.hard_count;
+
+    if (mixTotal === 0) {
+        const picked = await pool.query(
+            'SELECT id FROM questions WHERE course_id = $1 ORDER BY random() LIMIT $2',
+            [exam.course_id, exam.num_questions]
+        );
+        if (picked.rows.length < exam.num_questions) return null;
+        return picked.rows.map((r) => r.id);
+    }
+
+    const wanted = [
+        ['easy', exam.easy_count],
+        ['medium', exam.medium_count],
+        ['hard', exam.hard_count],
+    ];
+
+    let ids = [];
+    for (const [level, count] of wanted) {
+        if (count === 0) continue;
+        const picked = await pool.query(
+            `SELECT id FROM questions
+             WHERE course_id = $1 AND difficulty = $2
+             ORDER BY random() LIMIT $3`,
+            [exam.course_id, level, count]
+        );
+        if (picked.rows.length < count) return null;
+        ids = ids.concat(picked.rows.map((r) => r.id));
+    }
+
+    // Mix the levels together so easy questions are not always first
+    return shuffle(ids);
+}
+
 // GET /api/student/exams  - exams of the student's courses, with status
 async function listMyExams(req, res) {
     try {
@@ -65,7 +103,7 @@ async function startAttempt(req, res) {
     let client;
     try {
         const examResult = await pool.query(
-            `SELECT id, course_id, num_questions,
+            `SELECT id, course_id, num_questions, easy_count, medium_count, hard_count,
               NOW() < start_at AS not_started, NOW() >= end_at AS ended
        FROM exams WHERE id = $1`,
             [examId]
@@ -94,17 +132,13 @@ async function startAttempt(req, res) {
             return res.status(403).json({ message: 'This exam has ended' });
         }
 
-        // Pick random questions for this student
-        const picked = await pool.query(
-            'SELECT id FROM questions WHERE course_id = $1 ORDER BY random() LIMIT $2',
-            [exam.course_id, exam.num_questions]
-        );
-        if (picked.rows.length < exam.num_questions) {
+        // Pick random questions for this student (following the difficulty mix, if any)
+        const questionIds = await pickQuestions(exam);
+        if (!questionIds) {
             return res.status(409).json({
                 message: 'This exam does not have enough questions. Please contact your teacher',
             });
         }
-        const questionIds = picked.rows.map((r) => r.id);
 
         const opts = await pool.query(
             'SELECT id, question_id FROM options WHERE question_id = ANY($1::int[])',

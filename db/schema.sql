@@ -67,6 +67,9 @@ CREATE TABLE exams (
   switch_limit     INTEGER NOT NULL DEFAULT 3 CHECK (switch_limit >= 0),
   negative_marking BOOLEAN NOT NULL DEFAULT FALSE,
   release_results  BOOLEAN NOT NULL DEFAULT FALSE,
+  easy_count       INTEGER NOT NULL DEFAULT 0 CHECK (easy_count >= 0),
+  medium_count     INTEGER NOT NULL DEFAULT 0 CHECK (medium_count >= 0),
+  hard_count       INTEGER NOT NULL DEFAULT 0 CHECK (hard_count >= 0),
   created_by       INTEGER NOT NULL REFERENCES users(id),
   CHECK (end_at > start_at)
 );
