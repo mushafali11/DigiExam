@@ -46,7 +46,15 @@ Load test output:
 | Examination office wants records of irregularities | The activity report and timeline exist. CSV export is not built yet |
 | CP4 edge cases (refresh, lost connection, duplicate or late submit, two tabs, clock differences, double-fired events) | Handled on the server. Two-tab and late-save cases still need an automated test |
 
-## Tests still to add
+## Automated tests
+
+Run `npm test` (server running). `tests/edgeCases.js` checks about 50 cases: locked questions and exams, two simultaneous starts from one student (two tabs), late save, late submit, the background sweeper, double-fired tab events and the switch limit, grading with negative marking, the release rule, hidden correct answers, difficulty mix, wrong data types, bad JSON and role checks.
+
+Latest result:
+
+```
+(paste the final "N passed, 0 failed" line here)
+```
 
 - Editing or deleting a question that was used in an attempt gives 409.
 - Editing or deleting an exam after a student started gives 409.

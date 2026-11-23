@@ -60,6 +60,7 @@ The seed also creates course CSC336 (taught by the teacher, both students enroll
 
 ## Load test
 
+
 With the server running:
 
 ```
@@ -67,6 +68,14 @@ node tests/loadTest.js 30
 ```
 
 It simulates 30 students starting the same exam at once, answering and submitting (each submits twice at the same instant). It prints response times and PASS/FAIL checks.
+
+## Automated tests
+
+```
+npm test
+```
+
+Runs the edge-case test suite against the running server.
 
 ## Live demo checklist
 
