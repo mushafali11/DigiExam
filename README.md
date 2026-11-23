@@ -91,4 +91,6 @@ Runs the edge-case test suite against the running server.
 
 - Tab-switch logs are evidence, not proof (a second device cannot be detected).
 - The auto-submit sweeper runs inside the server process, so it assumes a single server.
-- No login rate limiting yet.
+
+
+- Rate limiting covers failed logins and registrations only (10 per 15 minutes for each email and device). There is no general per-IP limit, on purpose, because a whole class in one lab shares one IP.

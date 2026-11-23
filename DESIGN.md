@@ -38,6 +38,11 @@
 - The server grades at submission. A wrong answer costs 25% of that question's marks when negative marking is on (one constant in `services/attemptService.js`), unanswered questions cost nothing, and the total never goes below 0.
 - Correct answers are never sent to the browser during an attempt. Students see them only after the teacher releases results.
 
+## Rate limiting, CORS and headers
+- **Chosen:** failed login and register attempts are limited to 10 per 15 minutes for each email and device (429 after that). Successful logins are never counted. CORS only allows the frontend's origin. Helmet adds safe HTTP headers.
+- **Rejected:** a general requests-per-minute limit per IP. A whole class in a computer lab shares one IP address, so it would block students in the middle of an exam.
+- **Trade-off:** the limit counter lives in server memory, so it resets when the server restarts and assumes a single server.
+
 ## Security
 - Passwords are hashed with bcrypt. Login returns the same message for a wrong email and a wrong password.
 - JWT tokens last 8 hours. Every route checks the token, then the role, then ownership (for example a teacher can only touch their own courses).

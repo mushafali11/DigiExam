@@ -442,6 +442,21 @@ async function testValidationAndRoles() {
     check("another teacher cannot read my exam's analytics (403)", otherExam.status === 403, show(otherExam));
 }
 
+async function testRateLimit() {
+    section('8. Login rate limit');
+    const email = `ratelimit-${Date.now()}@test.com`;
+    const statuses = [];
+    for (let i = 0; i < 11; i++) {
+        const r = await api('POST', '/auth/login', null, { email, password: 'wrong-password' });
+        statuses.push(r.status);
+    }
+    check('the first 10 wrong logins get 401', statuses.slice(0, 10).every((s) => s === 401), statuses.join(','));
+    check('the 11th wrong login is blocked with 429', statuses[10] === 429, statuses.join(','));
+    const ok = await api('POST', '/auth/login', null, { email: 'student1@digiexam.com', password: 'student123' });
+    check('other accounts can still log in', ok.status === 200, show(ok));
+}
+
+
 // ---------------------------------------------------------------------------
 
 async function main() {
@@ -484,6 +499,7 @@ async function main() {
         testConcurrency,
         testDifficultyMix,
         testValidationAndRoles,
+        testRateLimit,
     ];
 
     for (const group of groups) {

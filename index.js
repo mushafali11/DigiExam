@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const pool = require('./db/pool');
 const { sweepExpiredAttempts } = require('./services/attemptService');
 
@@ -11,7 +12,27 @@ if (!process.env.JWT_SECRET) {
 
 const app = express();
 
-app.use(cors());
+// Safe HTTP headers
+app.use(helmet());
+
+// Only these browser origins may call the API (set CORS_ORIGIN in .env to change it).
+// Requests without an Origin header (Postman, PowerShell, tests) are always allowed.
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:3000')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      const err = new Error('Origin not allowed');
+      err.type = 'cors';
+      return callback(err);
+    },
+  })
+);
+
 app.use(express.json({ limit: '100kb' }));
 
 // Some Express versions leave req.body undefined when no body is sent
@@ -44,8 +65,11 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Anything that was not handled elsewhere (for example invalid JSON in the request body)
+// Anything that was not handled elsewhere
 app.use((err, req, res, next) => {
+  if (err.type === 'cors') {
+    return res.status(403).json({ message: 'This origin is not allowed' });
+  }
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ message: 'Request body is not valid JSON' });
   }
