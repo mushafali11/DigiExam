@@ -99,6 +99,7 @@ CREATE TABLE attempt_questions (
   question_id  INTEGER NOT NULL REFERENCES questions(id),
   position     INTEGER NOT NULL,
   option_order INTEGER[] NOT NULL,
+  flagged      BOOLEAN NOT NULL DEFAULT FALSE,
   UNIQUE (attempt_id, question_id),
   UNIQUE (attempt_id, position)
 );

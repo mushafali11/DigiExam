@@ -7,7 +7,8 @@ const {
   deleteExam,
 } = require('../controllers/examController');
 const { examActivity, attemptTimeline } = require('../controllers/activityController');
-const { examResults, examAnalytics } = require('../controllers/resultController');
+const { examAnalytics } = require('../controllers/resultController');
+const { examResults } = require('../controllers/listController');
 const {
   extendAttempt,
   attemptReview,

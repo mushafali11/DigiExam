@@ -48,6 +48,10 @@
 - JWT tokens last 8 hours. Every route checks the token, then the role, then ownership (for example a teacher can only touch their own courses).
 - Public registration only creates students. Teachers and admins are created by an admin.
 - All SQL is parameterized.
+## Backups, logging and continuous integration
+- **Backups:** `pg_dump` and `psql` are run without a shell, so nothing can be injected. A restore saves a safety copy first and runs as a single transaction (all or nothing). Backup files are ignored by Git because they contain password hashes.
+- **Logging:** one line per request with method, path, status, duration, user id and role. Passwords, tokens, bodies and query strings are never logged. Only important lines go to the console, so the log stays readable. An optional file holds the full audit trail.
+- **Continuous integration:** GitHub Actions starts a PostgreSQL database, creates the tables, seeds the data, starts the server and runs every suite plus the load test on each push. A broken change is caught before it reaches the demo.
 
 ## Reopening and extending attempts
 - **Chosen:** a teacher can add minutes to a running attempt, or reopen one that was auto-submitted by time-up or the switch limit. Saved answers are kept and the score is cleared until the student submits again. Every change is written to the event log with the reason. This resolves the "strict timing vs fairness" conflict (CP2) without weakening the server timer.

@@ -225,7 +225,7 @@ async function getAttempt(req, res) {
 
         const questionRows = (
             await pool.query(
-                `SELECT aq.position, aq.option_order, q.id AS question_id, q.text, q.marks::float AS marks
+                `SELECT aq.position, aq.option_order,  aq.flagged, q.id AS question_id, q.text, q.marks::float AS marks
          FROM attempt_questions aq JOIN questions q ON q.id = aq.question_id
          WHERE aq.attempt_id = $1
          ORDER BY aq.position`,
@@ -253,6 +253,7 @@ async function getAttempt(req, res) {
                 question_id: q.question_id,
                 text: q.text,
                 marks: q.marks,
+                flagged: q.flagged,
                 options: ordered,
             };
         });

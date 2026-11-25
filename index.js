@@ -2,8 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const swaggerUi = require('swagger-ui-express');
 const pool = require('./db/pool');
+const openapi = require('./docs/openapi');
 const { sweepExpiredAttempts } = require('./services/attemptService');
+const requestLogger = require('./middleware/requestLogger');
 
 if (!process.env.JWT_SECRET) {
   console.error('JWT_SECRET is missing in .env, so the server cannot start');
@@ -14,7 +17,7 @@ const app = express();
 
 // Safe HTTP headers
 app.use(helmet());
-
+app.use(requestLogger);
 // Only these browser origins may call the API (set CORS_ORIGIN in .env to change it).
 // Requests without an Origin header (Postman, PowerShell, tests) are always allowed.
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:3000')
@@ -51,6 +54,17 @@ app.get('/api/health', async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Database connection failed' });
   }
 });
+
+// API documentation: the raw OpenAPI file and an interactive page ("Try it out")
+app.get('/api/docs.json', (req, res) => res.json(openapi));
+app.use(
+  '/api/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(openapi, {
+    customSiteTitle: 'DigiExam API',
+    swaggerOptions: { persistAuthorization: true },
+  })
+);
 
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));

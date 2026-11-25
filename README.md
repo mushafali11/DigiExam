@@ -104,3 +104,25 @@ Wipes the database (asks you to type YES first) and rebuilds: demo accounts, 24 
 
 
 - Rate limiting covers failed logins and registrations only (10 per 15 minutes for each email and device). There is no general per-IP limit, on purpose, because a whole class in one lab shares one IP.
+
+## Backups
+
+```
+npm run db:backup                     saves the database to backups/ (keeps the newest 10)
+npm run db:restore                    lists the backups
+npm run db:restore -- latest          restores the newest one (asks you to type YES)
+```
+
+A restore first saves a safety copy of the current data and runs as one transaction. Needs pg_dump and psql on your PATH. The backups folder is in .gitignore because it contains password hashes.
+
+## Logging
+
+By default the server prints only important lines: errors (5xx), rate limiting (429), failed logins and slow requests. Set `LOG_LEVEL=all` to print every request, or `off` for none. Set `LOG_FILE=logs/access.log` to also write every request to a file. Passwords, tokens, request bodies and query strings are never logged.
+
+## Continuous integration
+
+Every push runs the whole test suite and the load test on GitHub (see the Actions tab).
+
+## Viva preparation
+
+See `VIVA_PREP.md`.

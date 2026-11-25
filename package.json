@@ -6,10 +6,12 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "node tests/edgeCases.js && node tests/extrasA.js && node tests/extrasB.js",
+    "test": "node tests/edgeCases.js && node tests/extrasA.js && node tests/extrasB.js && node tests/extrasC.js",
     "test:edge": "node tests/edgeCases.js",
-    "test:extras": "node tests/extrasA.js && node tests/extrasB.js",
-    "demo:reset": "node db/demoReset.js"
+    "test:extras": "node tests/extrasA.js && node tests/extrasB.js && node tests/extrasC.js",
+    "demo:reset": "node db/demoReset.js",
+    "db:backup": "node db/backup.js",
+    "db:restore": "node db/restore.js"
   },
   "license": "ISC",
   "type": "commonjs",
@@ -21,7 +23,8 @@
     "express-rate-limit": "^8.7.5",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.23.1"
+    "pg": "^8.23.1",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const {
-    createCourse,
-    listCourses,
-    enrollStudent,
-    listCourseStudents,
-    removeStudent,
+  createCourse,
+  listCourses,
+  enrollStudent,
+  listCourseStudents,
+  removeStudent,
 } = require('../controllers/courseController');
 const { updateCourse, deleteCourse } = require('../controllers/adminCourseController');
-const { createQuestion, listQuestions } = require('../controllers/questionController');
+const { createQuestion } = require('../controllers/questionController');
+const { listQuestions } = require('../controllers/listController');
 const { importQuestions, exportQuestions } = require('../controllers/importController');
 const { createExam, listExams } = require('../controllers/examController');
 const { authenticate, requireRole } = require('../middleware/auth');

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { createUser, listUsers, updateUser } = require('../controllers/adminController');
+const { createUser, updateUser } = require('../controllers/adminController');
+const { listUsers } = require('../controllers/listController');
 const { authenticate, requireRole } = require('../middleware/auth');
 
 // Every route in this file is admin-only
